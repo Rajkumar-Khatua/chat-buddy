@@ -7,16 +7,15 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import AuthSocialButton from "./AuthSocialButton";
 import { SlSocialGithub } from "react-icons/sl";
 import { SiGoogle } from "react-icons/si";
-import { CiFacebook } from "react-icons/ci";
-import { RiTwitterXFill } from "react-icons/ri";
-import { PiSlackLogoLight } from "react-icons/pi";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
 
 type Varient = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
   const [variant, setVariant] = useState<Varient>("LOGIN");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
   //   useCallback is used for memoization of the function so that it does not get re-created on every render of the component.
   const toggleVariant = useCallback(() => {
@@ -46,17 +45,54 @@ const AuthForm = () => {
     //   Call the API to login or register the user
 
     if (variant === "REGISTER") {
-      //   Call the API to register the user
+      axios
+        .post("/api/register", data)
+        .then(() =>
+          signIn("credentials", {
+            ...data,
+            redirect: false,
+          })
+        )
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error("Invalid credentials!");
+          }
+        })
+        .catch(() => toast.error("Something went wrong!"))
+        .finally(() => setIsLoading(false));
     }
     if (variant === "LOGIN") {
-      //   Call the API to login the user
+      signIn("credentials", {
+        ...data,
+        redirect: false,
+      })
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error(callback.error);
+          }
+          if (callback?.ok && !callback?.error) {
+            toast.success("Nice! You are logged in!");
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   };
 
   const socialAction = (action: string) => {
     setIsLoading(true);
 
-    // NextAuth social login
+    signIn(action, {
+      redirect: false,
+    })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error(callback.error);
+        }
+        if (callback?.ok && !callback?.error) {
+          toast.success("Nice! You are logged in!");
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -137,18 +173,6 @@ const AuthForm = () => {
             <AuthSocialButton
               icon={SiGoogle}
               onClick={() => socialAction("google")}
-            />
-            <AuthSocialButton
-              icon={CiFacebook}
-              onClick={() => socialAction("facebook")}
-            />
-            <AuthSocialButton
-              icon={RiTwitterXFill}
-              onClick={() => socialAction("twitter")}
-            />
-            <AuthSocialButton
-              icon={PiSlackLogoLight}
-              onClick={() => socialAction("slack")}
             />
           </div>
         </div>
