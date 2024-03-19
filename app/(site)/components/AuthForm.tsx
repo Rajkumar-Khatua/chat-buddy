@@ -2,20 +2,29 @@
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/inputs/Input";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import AuthSocialButton from "./AuthSocialButton";
 import { SlSocialGithub } from "react-icons/sl";
 import { SiGoogle } from "react-icons/si";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type Varient = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
+  const session = useSession();
+  const router = useRouter();
   const [variant, setVariant] = useState<Varient>("LOGIN");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (session?.status === "authenticated") {
+      router.push("/users");
+    }
+  }, [session?.status, router]);
 
   //   useCallback is used for memoization of the function so that it does not get re-created on every render of the component.
   const toggleVariant = useCallback(() => {
@@ -47,18 +56,10 @@ const AuthForm = () => {
     if (variant === "REGISTER") {
       axios
         .post("/api/register", data)
-        .then(() =>
-          signIn("credentials", {
-            ...data,
-            redirect: false,
-          })
-        )
-        .then((callback) => {
-          if (callback?.error) {
-            toast.error("Invalid credentials!");
-          }
+        .then(() => signIn("credentials", data))
+        .catch((error) => {
+          toast.error(error.response.data.message);
         })
-        .catch(() => toast.error("Something went wrong!"))
         .finally(() => setIsLoading(false));
     }
     if (variant === "LOGIN") {
@@ -72,6 +73,7 @@ const AuthForm = () => {
           }
           if (callback?.ok && !callback?.error) {
             toast.success("Nice! You are logged in!");
+            router.push("/users");
           }
         })
         .finally(() => setIsLoading(false));
