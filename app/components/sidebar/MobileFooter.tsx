@@ -3,6 +3,7 @@
 import useRoutes from "@/app/hooks/useRoute";
 import useConversation from "@/app/hooks/useConversation";
 import MobileItem from "./MobileItem";
+import Avatar from "../Avatar";
 
 const MobileFooter = () => {
   const routes = useRoutes();

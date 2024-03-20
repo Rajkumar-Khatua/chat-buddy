@@ -7,7 +7,7 @@ export default async function UserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const users = getUsers();
+  const users = await getUsers();
   return (
     <Sidebar>
       <div className="h-full">

@@ -49,7 +49,7 @@ const MobileItem: React.FC<MobileItemProps> = ({
             cursor-pointer
 
         `,
-        active && "bg-gray-200 text-purple-600 shadow-lg"
+        active && "bg-gray-200 text-purple-600 shadow-lg font-semibold"
       )}
     >
       <Icon className="w-6 h-6" />
